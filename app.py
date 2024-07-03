@@ -7,6 +7,11 @@ sys.path.append("..")
 # Inicializa eel con la carpeta 'html' donde están los archivos HTML
 eel.init("html")
 
+# Define una función expuesta a JavaScript
+@eel.expose
+def saludo(nombre):
+    return f"Hola, {nombre}!"
+
 def start_eel():
     # Lista de navegadores con su modo y ruta (si es necesario)
     browsers = [
