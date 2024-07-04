@@ -1,64 +1,96 @@
-import tkinter as tk
-from tkinter import Button, Label
-from PIL import Image, ImageTk, ImageDraw
-from insertarDatos import InsertarDatosWindow
+import sys
+from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QFrame, QFileDialog, QMessageBox
+from PyQt5.QtGui import QPixmap, QPainter, QPainterPath, QImage
+from PyQt5.QtCore import Qt
+from agregar import AgregarWindow
 
-class App:
-    def __init__(self, root):
-        self.root = root
-        root.title("Interfaz Responsive")
-        root.geometry("600x400")
+class MainApp(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Interfaz Responsive")
+        self.setGeometry(100, 100, 800, 600)
 
-        # Dividir la ventana en dos marcos
-        self.left_frame = tk.Frame(root, width=400, height=400, bg="#fff")
-        self.left_frame.pack(side=tk.LEFT, fill=tk.Y, padx=10, pady=10)
+        self.central_widget = QWidget()
+        self.setCentralWidget(self.central_widget)
 
-        self.right_frame = tk.Frame(root, width=400, height=400, bg="#f0f0f0")
-        self.right_frame.pack(side=tk.RIGHT, fill=tk.Y, padx=10, pady=10)
+        self.main_layout = QHBoxLayout(self.central_widget)
 
-        # Agregar imagen circular y texto en el marco izquierdo
-        self.img = Image.open("img/imagen.jpeg")
-        self.img = self.make_image_circular(self.img, size=(200, 200))
-        self.img = ImageTk.PhotoImage(self.img)
+        # Frame izquierdo
+        self.left_frame = QFrame(self)
+        self.left_frame.setFrameShape(QFrame.StyledPanel)
+        self.left_frame.setMinimumWidth(400)
+        self.main_layout.addWidget(self.left_frame)
 
-        self.img_label = Label(self.left_frame, image=self.img, bg="#fff")
-        self.img_label.pack(pady=20)
+        self.left_layout = QVBoxLayout(self.left_frame)
 
-        self.text_label = tk.Label(self.left_frame, text="MECHI\nEquipo 4\nInteligencia de Negocios\nDr. Luis Mena", bg="#fff", font=("Arial", 16))
-        self.text_label.pack(pady=10)
+        # Imagen circular
+        self.img_label = QLabel(self.left_frame)
+        self.img_label.setPixmap(self.make_image_circular("img/imagen.jpeg", (200, 200)))
+        self.img_label.setAlignment(Qt.AlignCenter)
+        self.left_layout.addWidget(self.img_label)
 
-        # Agregar botones en el marco derecho
-        self.button_frame = tk.Frame(self.right_frame, bg="#f0f0f0")
-        self.button_frame.pack(expand=True, fill=tk.Y, padx=20, pady=20)
+        # Texto
+        self.text_label = QLabel("MECHI\nEquipo 4\nInteligencia de Negocios\nDr. Luis Mena", self.left_frame)
+        self.text_label.setAlignment(Qt.AlignCenter)
+        self.text_label.setStyleSheet("font-size: 16px;")
+        self.left_layout.addWidget(self.text_label)
 
-        Button(self.button_frame, text="Insertar", font=("Arial", 14), command=self.open_insertar_datos_window).pack(pady=10, fill=tk.X)
-        Button(self.button_frame, text="Importar Datos", font=("Arial", 14), command=self.open_import_window).pack(pady=10, fill=tk.X)
-        Button(self.button_frame, text="Cerrar", font=("Arial", 14), command=self.close_app).pack(pady=10, fill=tk.X)
+        # Frame derecho
+        self.right_frame = QFrame(self)
+        self.right_frame.setFrameShape(QFrame.StyledPanel)
+        self.right_frame.setMinimumWidth(400)
+        self.main_layout.addWidget(self.right_frame)
 
-    def make_image_circular(self, img, size):
-        img = img.resize(size, Image.Resampling.LANCZOS)
-        mask = Image.new('L', size, 0)
-        draw = ImageDraw.Draw(mask)
-        draw.ellipse((0, 0, size[0], size[1]), fill=255)
-        img.putalpha(mask)
-        return img
+        self.right_layout = QVBoxLayout(self.right_frame)
 
-    def open_insertar_datos_window(self):
-        InsertarDatosWindow(self.root, self.open_generar_instancias_window)
+        # Botones
+        self.insertar_button = QPushButton("Insertar", self.right_frame)
+        self.insertar_button.setStyleSheet("font-size: 14px;")
+        self.insertar_button.clicked.connect(self.open_agregar_window)
+        self.right_layout.addWidget(self.insertar_button)
 
-    def open_import_window(self):
-        # Aquí deberías llamar a la ventana de importación cuando esté definida
-        pass
+        self.importar_button = QPushButton("Importar Datos", self.right_frame)
+        self.importar_button.setStyleSheet("font-size: 14px;")
+        self.importar_button.clicked.connect(self.open_agregar_window_and_import_data)
+        self.right_layout.addWidget(self.importar_button)
+
+        self.cerrar_button = QPushButton("Cerrar", self.right_frame)
+        self.cerrar_button.setStyleSheet("font-size: 14px;")
+        self.cerrar_button.clicked.connect(self.close_app)
+        self.right_layout.addWidget(self.cerrar_button)
+
+    def make_image_circular(self, image_path, size):
+        img = QImage(image_path)
+        img = img.scaled(size[0], size[1], Qt.KeepAspectRatio, Qt.SmoothTransformation)
+
+        output = QImage(size[0], size[1], QImage.Format_ARGB32)
+        output.fill(Qt.transparent)
+
+        painter = QPainter(output)
+        path = QPainterPath()
+        path.addEllipse(0, 0, size[0], size[1])
+        painter.setClipPath(path)
+        painter.drawImage(0, 0, img)
+        painter.end()
+
+        return QPixmap.fromImage(output)
+
+    def open_agregar_window(self):
+        self.agregar_window = AgregarWindow()
+        self.agregar_window.show()
+
+    def open_agregar_window_and_import_data(self):
+        self.agregar_window = AgregarWindow()
+        self.agregar_window.show()
+        # Ejecutar el método import_data al abrir la ventana
+        self.agregar_window.import_data()
 
     def close_app(self):
-        self.root.destroy()
+        self.close()
 
-    def open_generar_instancias_window(self, columns, rows):
-        from generarInstancias import GenerarInstanciasWindow
-        GenerarInstanciasWindow(self.root, columns, rows)
-
-# Crear la ventana principal
+# Ejecutar la aplicación
 if __name__ == "__main__":
-    root = tk.Tk()
-    app = App(root)
-    root.mainloop()
+    app = QApplication(sys.argv)
+    main_app = MainApp()
+    main_app.show()
+    sys.exit(app.exec_())
