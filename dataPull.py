@@ -92,3 +92,26 @@ for condition in conditions:
         print(f"{condition}: Cobertura = {coverage*100:.2f}% ({coverage_count}/{contingency_table.at['All', 'All']}), Confianza = {confidence*100:.2f}% ({coverage_count}/{total_condition})")
     else:
         print(f"{condition}: No se pudo calcular cobertura y confianza")
+
+# Función para calcular el factor de dependencia
+def calculate_dependency_factor(contingency_table):
+    total = contingency_table.at['All', 'All']
+    factors = pd.DataFrame(index=['n1', '~n1'], columns=['n2', '~n2'])
+
+    for i in ['n1', '~n1']:
+        for j in ['n2', '~n2']:
+            P_i_and_j = contingency_table.at[i, j] / total
+            P_i = contingency_table.at[i, 'All'] / total
+            P_j = contingency_table.at['All', j] / total
+            if P_i * P_j != 0:
+                FD = P_i_and_j / (P_i * P_j)
+            else:
+                FD = 0
+            factors.at[i, j] = round(FD, 3)  # Redondear a 3 decimales
+
+    return factors
+
+# Calcular el factor de dependencia
+dependency_factors = calculate_dependency_factor(contingency_table)
+print("\nFactor de Dependencia:")
+print(dependency_factors.to_string(index_names=False, col_space=10))
