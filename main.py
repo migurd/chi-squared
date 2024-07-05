@@ -25,7 +25,7 @@ class MainApp(QMainWindow):
 
         # Imagen circular
         self.img_label = QLabel(self.left_frame)
-        self.img_label.setPixmap(self.make_image_circular("img/imagen.jpeg", (200, 200)))
+        self.img_label.setPixmap(self.make_image_circular("img/35.jpeg", (200, 200)))
         self.img_label.setAlignment(Qt.AlignCenter)
         self.left_layout.addWidget(self.img_label)
 
