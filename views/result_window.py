@@ -1,19 +1,24 @@
 from PyQt5.QtWidgets import (
-  QWidget, QVBoxLayout, QLabel, QTableWidget, QTableWidgetItem, QHeaderView, QScrollArea, QShortcut
+  QWidget, QVBoxLayout, QLabel, QTableWidget, QTableWidgetItem, QHeaderView, QScrollArea
 )
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QIcon, QColor, QKeySequence
-from Models.column import Column
-from Models.table import Table
+from PyQt5.QtGui import QIcon, QColor
+from models.column import Column
+from models.table import Table
 
 class ResultWindow(QWidget):
+  """
+  Clase que representa la ventana de resultados.
+  Muestra los resultados de la tabla de contingencia, confianza y cobertura, factor de dependencia, y chi-cuadrado.
+  """
+
   def __init__(self, table):
     super().__init__()
     self.setWindowTitle("Resultados")
     self.setGeometry(200, 200, 800, 700)
 
-    # Set the application icon
-    self.setWindowIcon(QIcon('img/IconLogoMechi.png'))  # Change to your icon path
+    # Establecer el icono de la aplicación
+    self.setWindowIcon(QIcon('img/IconLogoMechi.png'))  # Cambiar a la ruta de tu icono
 
     self.table = table
     self.init_ui()
@@ -27,39 +32,39 @@ class ResultWindow(QWidget):
     container = QWidget()
     layout = QVBoxLayout(container)
 
-    # Title
+    # Título de la ventana
     title = QLabel("Resultados")
     title.setStyleSheet("font-size: 30px; font-weight: bold; color: #145c96; margin-bottom: 20px;")
     title.setAccessibleName("Resultados")
     title.setAccessibleDescription("Título de la ventana de resultados")
     layout.addWidget(title)
 
-    # Contingency table title
+    # Título de la tabla de contingencia
     cont_table_title = QLabel("Tabla de contingencia")
     cont_table_title.setStyleSheet("font-size: 22px; font-weight: bold; color: #145c96; margin-bottom: 10px;")
     cont_table_title.setAccessibleName("Tabla de contingencia")
     cont_table_title.setAccessibleDescription("Título de la tabla de contingencia")
     layout.addWidget(cont_table_title)
 
-    # Contingency table
+    # Tabla de contingencia
     self.create_table(layout, self.table.get_contingency_table(), "contingency")
 
-    # Separator
+    # Separador
     layout.addWidget(self.create_separator())
 
-    # Cobertura and coverage title
+    # Título de confianza y cobertura
     conf_cov_title = QLabel("Confianza y cobertura")
     conf_cov_title.setStyleSheet("font-size: 22px; font-weight: bold; color: #145c96; margin-bottom: 10px;")
     conf_cov_title.setAccessibleName("Confianza y cobertura")
     conf_cov_title.setAccessibleDescription("Título de la sección de confianza y cobertura")
     layout.addWidget(conf_cov_title)
 
-    # Cobertura and coverage results
+    # Resultados de confianza y cobertura
     coverage_list, confidence_list = self.table.get_coverage_confidence()
     for coverage, confidence in zip(coverage_list, confidence_list):
       coverage_label = QLabel(f"Cobertura: {coverage}")
       confidence_label = QLabel(f"Confianza: {confidence}")
-      separator_label = QLabel("." * 100)  # Separator
+      separator_label = QLabel("." * 100)  # Separador
 
       coverage_label.setStyleSheet("font-size: 17px; color: #333; margin-bottom: 5px;")
       confidence_label.setStyleSheet("font-size: 17px; color: #333; margin-bottom: 15px;")
@@ -74,34 +79,34 @@ class ResultWindow(QWidget):
       layout.addWidget(confidence_label)
       layout.addWidget(separator_label)
 
-    # Separator
+    # Separador
     layout.addWidget(self.create_separator())
 
-    # Dependency factor title
+    # Título del factor de dependencia
     dep_factor_title = QLabel("Factor de dependencia")
     dep_factor_title.setStyleSheet("font-size: 22px; font-weight: bold; color: #145c96; margin-bottom: 10px;")
     dep_factor_title.setAccessibleName("Factor de dependencia")
     dep_factor_title.setAccessibleDescription("Título de la sección de factor de dependencia")
     layout.addWidget(dep_factor_title)
 
-    # Dependency factors table
+    # Tabla de factores de dependencia
     self.create_table(layout, self.table.get_dependency_factor(), "dependency")
 
-    # Separator
+    # Separador
     layout.addWidget(self.create_separator())
 
-    # Chi-squared calculation
+    # Cálculo de chi-cuadrado
     chi_squared_value, chi_squared_steps, result_string = self.table.calculate_chi_squared()
     significance = self.table.determine_significance(chi_squared_value)
 
-    # Chi-squared results title
+    # Título de los resultados de chi-cuadrado
     chi_squared_title = QLabel("Chi-cuadrado")
     chi_squared_title.setStyleSheet("font-size: 22px; font-weight: bold; color: #145c96; margin-bottom: 10px;")
     chi_squared_title.setAccessibleName("Chi-cuadrado")
     chi_squared_title.setAccessibleDescription("Título de la sección de Chi-cuadrado")
     layout.addWidget(chi_squared_title)
 
-    # Display the chi-squared results
+    # Mostrar los resultados de chi-cuadrado
     chi_squared_label = QLabel(f"Valor Chi-cuadrado: {chi_squared_value:.4f}\n")
     result_string_label = QLabel(f'{result_string}\n')
     significance_label = QLabel(significance)
@@ -126,6 +131,13 @@ class ResultWindow(QWidget):
     self.setLayout(main_layout)
 
   def create_table(self, layout, data, table_type):
+    """
+    Crea y configura una tabla con los datos proporcionados.
+
+    :param layout: Layout donde se agregará la tabla.
+    :param data: Datos a mostrar en la tabla.
+    :param table_type: Tipo de tabla (contingencia o dependencia).
+    """
     table_size_x = 700
     table_size_y = 250
     if table_type == "contingency":
@@ -167,62 +179,25 @@ class ResultWindow(QWidget):
     layout.addWidget(table)
 
   def create_separator(self):
+    """
+    Crea un separador visual.
+
+    :return: QLabel que actúa como separador.
+    """
     separator = QLabel()
     separator.setFixedHeight(20)
     separator.setStyleSheet("background-color: #eee;")
     return separator
 
-  def enable_high_contrast(self):
-    self.setStyleSheet("""
-      QWidget {
-        background-color: #000;
-        color: #fff;
-      }
-      QLabel {
-        color: #fff;
-      }
-      QTableWidget {
-        background-color: #000;
-        color: #fff;
-        border: 1px solid #fff;
-      }
-      QHeaderView::section {
-        background-color: #333;
-        color: #fff;
-        border: 1px solid #fff;
-      }
-      QTableWidgetItem {
-        background-color: #000;
-        color: #fff;
-        border: 1px solid #fff;
-      }
-    """)
-
-  def enable_large_text(self):
-    self.setStyleSheet("""
-      QLabel {
-        font-size: 22px;
-      }
-      QTableWidget {
-        font-size: 22px;
-      }
-      QHeaderView::section {
-        font-size: 22px;
-      }
-      QTableWidgetItem {
-        font-size: 22px;
-      }
-    """)
-
 if __name__ == "__main__":
-  from Models.table import Table
-  from Models.column import Column
+  from models.table import Table
+  from models.column import Column
   import sys
   from PyQt5.QtWidgets import QApplication
 
   app = QApplication(sys.argv)
   table = Table()
-  # Example columns and data
+  # Ejemplo de columnas y datos
   col1 = Column('GO', [0, 1, 1, 0, 1, 0, 0, 1])
   col2 = Column('PS', [1, 0, 1, 1, 1, 0, 1, 0])
   table.add_column(col1)

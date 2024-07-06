@@ -1,4 +1,7 @@
 class Column:
+  """
+  Clase que representa una columna en una tabla, con un nombre y una lista de valores binarios (0 o 1).
+  """
   def __init__(self, name: str, values: list[int]):
     self.name = name
     self.values = values

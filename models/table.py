@@ -1,15 +1,7 @@
 import math
 import pandas as pd
 from typing import List, Tuple
-
-class Column:
-  """
-  Clase que representa una columna en una tabla, con un nombre y una lista de valores binarios (0 o 1).
-  """
-
-  def __init__(self, name: str, values: List[int]):
-    self.name = name
-    self.values = values
+from .column import Column
 
 class Table:
   """

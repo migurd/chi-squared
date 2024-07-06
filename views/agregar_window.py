@@ -2,24 +2,29 @@ import random
 import pandas as pd
 from PyQt5.QtWidgets import (
   QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QTableWidget, QTableWidgetItem, QLineEdit, QMessageBox, QFileDialog,
-  QCheckBox, QFormLayout, QHeaderView, QLabel, QSpacerItem, QSizePolicy
+  QCheckBox, QHeaderView, QLabel, QSpacerItem, QSizePolicy
 )
 from PyQt5.QtGui import QIcon, QColor
-from PyQt5.QtCore import Qt  # Corrected import statement
-from Models.table import Table
-from Models.column import Column
-from result_window import ResultWindow
+from PyQt5.QtCore import Qt
+from models.table import Table
+from models.column import Column
+from views.result_window import ResultWindow
 
 class AgregarWindow(QWidget):
+  """
+  Clase que representa la ventana para agregar datos.
+  Permite al usuario agregar, eliminar y gestionar columnas y filas en una tabla.
+  """
+
   def __init__(self):
     super().__init__()
     self.setWindowTitle("Agregar Datos")
     self.setGeometry(150, 150, 800, 600)
 
-    # Set the application icon
-    self.setWindowIcon(QIcon('img/IconLogoMechi.png'))  # Change to your icon path
+    # Establecer el icono de la aplicación
+    self.setWindowIcon(QIcon('img/IconLogoMechi.png'))
 
-    self.main_layout = QHBoxLayout(self)  # Change to QHBoxLayout for left-right layout
+    self.main_layout = QHBoxLayout(self)
     self.setStyleSheet("""
       QWidget {
         background-color: #f0f0f0;
@@ -56,10 +61,10 @@ class AgregarWindow(QWidget):
       }
     """)
 
-    # Left panel for buttons and input
+    # Panel izquierdo para botones e inputs
     self.left_panel = QVBoxLayout()
-    self.left_panel.setSpacing(10)  # Optional: Adjust spacing between elements
-    self.main_layout.addLayout(self.left_panel, 1)  # 20% of space
+    self.left_panel.setSpacing(10)
+    self.main_layout.addLayout(self.left_panel, 1)
 
     # Campo para ingresar el nombre de la columna
     self.column_name_input = QLineEdit(self)
@@ -69,41 +74,41 @@ class AgregarWindow(QWidget):
     # Botones para agregar y eliminar columnas
     self.add_column_button = QPushButton("Agregar Columna", self)
     self.add_column_button.clicked.connect(self.add_column)
-    self.add_column_button.setCursor(Qt.PointingHandCursor)  # Updated cursor setting
+    self.add_column_button.setCursor(Qt.PointingHandCursor)
     self.left_panel.addWidget(self.add_column_button)
 
     self.remove_column_button = QPushButton("Eliminar Columna", self)
     self.remove_column_button.clicked.connect(self.remove_column)
-    self.remove_column_button.setCursor(Qt.PointingHandCursor)  # Updated cursor setting
+    self.remove_column_button.setCursor(Qt.PointingHandCursor)
     self.left_panel.addWidget(self.remove_column_button)
 
     # Botones para agregar y eliminar filas
     self.add_row_button = QPushButton("Agregar Fila", self)
     self.add_row_button.clicked.connect(self.add_row)
-    self.add_row_button.setCursor(Qt.PointingHandCursor)  # Updated cursor setting
+    self.add_row_button.setCursor(Qt.PointingHandCursor)
     self.left_panel.addWidget(self.add_row_button)
 
     self.remove_row_button = QPushButton("Eliminar Fila", self)
     self.remove_row_button.clicked.connect(self.remove_row)
-    self.remove_row_button.setCursor(Qt.PointingHandCursor)  # Updated cursor setting
+    self.remove_row_button.setCursor(Qt.PointingHandCursor)
     self.left_panel.addWidget(self.remove_row_button)
 
     # Botón para limpiar toda la tabla
     self.clear_table_button = QPushButton("Limpiar Tabla", self)
     self.clear_table_button.clicked.connect(self.clear_table)
-    self.clear_table_button.setCursor(Qt.PointingHandCursor)  # Updated cursor setting
+    self.clear_table_button.setCursor(Qt.PointingHandCursor)
     self.left_panel.addWidget(self.clear_table_button)
 
     # Botón para importar datos
     self.import_data_button = QPushButton("Importar Datos", self)
     self.import_data_button.clicked.connect(self.import_data)
-    self.import_data_button.setCursor(Qt.PointingHandCursor)  # Updated cursor setting
+    self.import_data_button.setCursor(Qt.PointingHandCursor)
     self.left_panel.addWidget(self.import_data_button)
 
     # Botón para generar números binarios aleatorios
     self.random_binary_button = QPushButton("Random", self)
     self.random_binary_button.clicked.connect(self.generate_random_binaries)
-    self.random_binary_button.setCursor(Qt.PointingHandCursor)  # Updated cursor setting
+    self.random_binary_button.setCursor(Qt.PointingHandCursor)
     self.left_panel.addWidget(self.random_binary_button)
 
     # Espaciador para ocupar espacio sobrante
@@ -113,19 +118,19 @@ class AgregarWindow(QWidget):
     self.show_results_button = QPushButton("Mostrar Resultados", self)
     self.show_results_button.setMinimumHeight(50)
     self.show_results_button.clicked.connect(self.show_results)
-    self.show_results_button.setCursor(Qt.PointingHandCursor)  # Updated cursor setting
+    self.show_results_button.setCursor(Qt.PointingHandCursor)
     self.left_panel.addWidget(self.show_results_button)
 
-    # Right panel for the table and checkboxes
+    # Panel derecho para la tabla y checkboxes
     self.right_panel = QVBoxLayout()
-    self.main_layout.addLayout(self.right_panel, 4)  # 80% of space
+    self.main_layout.addLayout(self.right_panel, 4)
 
-    # Crear contenedor para las tablas y los checkboxes
+    # Contenedor para la tabla y los checkboxes
     self.table_container = QWidget()
     self.table_layout = QVBoxLayout(self.table_container)
     self.right_panel.addWidget(self.table_container)
 
-    # Crear un layout para checkboxes
+    # Layout para checkboxes
     self.checkboxes_layout = QHBoxLayout()
     self.table_layout.addLayout(self.checkboxes_layout)
 
@@ -139,7 +144,7 @@ class AgregarWindow(QWidget):
     # Crear objeto Table
     self.data_table = Table()
 
-    # Configure the table to adjust header and wrap text
+    # Configurar la tabla para ajustar el encabezado y envolver texto
     self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
     self.table.horizontalHeader().setStyleSheet("""
       QHeaderView::section { 
@@ -152,6 +157,9 @@ class AgregarWindow(QWidget):
     self.table.setWordWrap(True)
 
   def add_column(self):
+    """
+    Añade una nueva columna a la tabla y un checkbox correspondiente.
+    """
     column_name = self.column_name_input.text().strip()  # Limpiar espacios en blanco
 
     if isinstance(column_name, str):  # Verificar que column_name es una cadena de texto
@@ -177,6 +185,9 @@ class AgregarWindow(QWidget):
       QMessageBox.warning(self, "Error", "El valor del campo de entrada no es una cadena de texto.")
 
   def remove_column(self):
+    """
+    Elimina la última columna de la tabla y su checkbox correspondiente.
+    """
     current_column_count = self.table.columnCount()
     if current_column_count > 0:
       self.table.removeColumn(current_column_count - 1)
@@ -193,6 +204,9 @@ class AgregarWindow(QWidget):
       QMessageBox.warning(self, "Advertencia", "No hay columnas para eliminar.")
 
   def add_row(self):
+    """
+    Añade una nueva fila a la tabla.
+    """
     if self.table.columnCount() > 0:  # Verificar que hay al menos una columna
       row_count = self.table.rowCount()
       self.table.insertRow(row_count)
@@ -200,6 +214,9 @@ class AgregarWindow(QWidget):
       QMessageBox.warning(self, "Advertencia", "Agregue al menos una columna antes de agregar filas.")
 
   def remove_row(self):
+    """
+    Elimina la última fila de la tabla.
+    """
     row_count = self.table.rowCount()
     if row_count > 0:
       self.table.removeRow(row_count - 1)
@@ -207,6 +224,9 @@ class AgregarWindow(QWidget):
       QMessageBox.warning(self, "Advertencia", "No hay filas para eliminar.")
 
   def clear_table(self):
+    """
+    Limpia toda la tabla y los checkboxes.
+    """
     self.table.setRowCount(0)
     self.table.setColumnCount(0)
     self.column_names = []
@@ -217,6 +237,9 @@ class AgregarWindow(QWidget):
     self.checkboxes = []
 
   def import_data(self):
+    """
+    Importa datos desde un archivo de Excel a la tabla.
+    """
     options = QFileDialog.Options()
     file_name, _ = QFileDialog.getOpenFileName(self, "Abrir archivo de Excel", "", "Archivos Excel (*.xlsx);;Todos los archivos (*)", options=options)
 
@@ -274,24 +297,30 @@ class AgregarWindow(QWidget):
         QMessageBox.warning(self, "Error", f"Ocurrió un error al leer el archivo: {str(e)}")
 
   def generate_random_binaries(self):
+    """
+    Genera valores binarios aleatorios (0 o 1) para toda la tabla.
+    """
     for row in range(self.table.rowCount()):
       for col in range(self.table.columnCount()):
         random_value = str(random.randint(0, 1))
         self.table.setItem(row, col, QTableWidgetItem(random_value))
 
   def show_results(self):
-    # Ensure exactly two columns are selected
+    """
+    Muestra los resultados en una nueva ventana asegurándose de que se cumplan las condiciones necesarias.
+    """
+    # Verificar que exactamente dos columnas están seleccionadas
     selected_checkboxes = [i for i, checkbox in enumerate(self.checkboxes) if checkbox.isChecked()]
     if len(selected_checkboxes) != 2:
       QMessageBox.warning(self, "Advertencia", "Debe seleccionar exactamente dos columnas.")
       return
 
-    # Ensure at least one row is present
+    # Verificar que hay al menos una fila
     if self.table.rowCount() == 0:
       QMessageBox.warning(self, "Advertencia", "Debe haber al menos una fila en la tabla.")
       return
 
-    # Ensure all values are binary and present
+    # Verificar que todos los valores son binarios y están presentes
     all_values_valid = True
     for row in range(self.table.rowCount()):
       for col in range(self.table.columnCount()):
@@ -306,7 +335,7 @@ class AgregarWindow(QWidget):
       QMessageBox.warning(self, "Advertencia", "Todas las filas deben tener valores válidos (0 o 1).")
       return
 
-    # Update the data_table with the values from the table
+    # Actualizar la data_table con los valores de la tabla
     self.data_table.clear_columns()
     for col_index in range(self.table.columnCount()):
       column_data = []
