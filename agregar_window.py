@@ -1,10 +1,11 @@
+import random
 import pandas as pd
 from PyQt5.QtWidgets import (
   QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QTableWidget, QTableWidgetItem, QLineEdit, QMessageBox, QFileDialog,
-  QCheckBox, QFormLayout
+  QCheckBox, QFormLayout, QHeaderView, QLabel, QSpacerItem, QSizePolicy
 )
-from PyQt5.QtGui import QIcon
-from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QIcon, QColor
+from PyQt5.QtCore import Qt  # Corrected import statement
 from Models.table import Table
 from Models.column import Column
 from result_window import ResultWindow
@@ -15,52 +16,114 @@ class AgregarWindow(QWidget):
     self.setWindowTitle("Agregar Datos")
     self.setGeometry(150, 150, 800, 600)
 
-		# Set the application icon
+    # Set the application icon
     self.setWindowIcon(QIcon('img/IconLogoMechi.png'))  # Change to your icon path
 
-    self.main_layout = QVBoxLayout(self)
+    self.main_layout = QHBoxLayout(self)  # Change to QHBoxLayout for left-right layout
+    self.setStyleSheet("""
+      QWidget {
+        background-color: #f0f0f0;
+      }
+      QPushButton {
+        background-color: #145c96;
+        color: white;
+        border-radius: 5px;
+        padding: 10px;
+        font-size: 14px;
+      }
+      QPushButton:hover {
+        background-color: #1976D2;
+      }
+      QLineEdit {
+        padding: 2px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        font-size: 14px;
+      }
+      QTableWidget {
+        background-color: white;
+        border: 1px solid #ccc;
+      }
+      QHeaderView::section {
+        background-color: #145c96;
+        color: white;
+        padding: 5px;
+        border: 1px solid #ccc;
+      }
+      QCheckBox {
+        padding: 5px;
+        font-size: 14px;
+      }
+    """)
 
-    self.top_layout = QHBoxLayout()
-    self.main_layout.addLayout(self.top_layout)
+    # Left panel for buttons and input
+    self.left_panel = QVBoxLayout()
+    self.left_panel.setSpacing(10)  # Optional: Adjust spacing between elements
+    self.main_layout.addLayout(self.left_panel, 1)  # 20% of space
 
     # Campo para ingresar el nombre de la columna
     self.column_name_input = QLineEdit(self)
-    self.column_name_input.setPlaceholderText("Ingrese el nombre de la columna")
-    self.column_name_input.setMinimumWidth(200)
-    self.top_layout.addWidget(self.column_name_input)
+    self.column_name_input.setPlaceholderText("Nombre de columna...")
+    self.left_panel.addWidget(self.column_name_input)
 
     # Botones para agregar y eliminar columnas
     self.add_column_button = QPushButton("Agregar Columna", self)
     self.add_column_button.clicked.connect(self.add_column)
-    self.top_layout.addWidget(self.add_column_button)
+    self.add_column_button.setCursor(Qt.PointingHandCursor)  # Updated cursor setting
+    self.left_panel.addWidget(self.add_column_button)
 
     self.remove_column_button = QPushButton("Eliminar Columna", self)
     self.remove_column_button.clicked.connect(self.remove_column)
-    self.top_layout.addWidget(self.remove_column_button)
+    self.remove_column_button.setCursor(Qt.PointingHandCursor)  # Updated cursor setting
+    self.left_panel.addWidget(self.remove_column_button)
 
     # Botones para agregar y eliminar filas
     self.add_row_button = QPushButton("Agregar Fila", self)
     self.add_row_button.clicked.connect(self.add_row)
-    self.top_layout.addWidget(self.add_row_button)
+    self.add_row_button.setCursor(Qt.PointingHandCursor)  # Updated cursor setting
+    self.left_panel.addWidget(self.add_row_button)
 
     self.remove_row_button = QPushButton("Eliminar Fila", self)
     self.remove_row_button.clicked.connect(self.remove_row)
-    self.top_layout.addWidget(self.remove_row_button)
+    self.remove_row_button.setCursor(Qt.PointingHandCursor)  # Updated cursor setting
+    self.left_panel.addWidget(self.remove_row_button)
 
     # Botón para limpiar toda la tabla
     self.clear_table_button = QPushButton("Limpiar Tabla", self)
     self.clear_table_button.clicked.connect(self.clear_table)
-    self.top_layout.addWidget(self.clear_table_button)
+    self.clear_table_button.setCursor(Qt.PointingHandCursor)  # Updated cursor setting
+    self.left_panel.addWidget(self.clear_table_button)
 
     # Botón para importar datos
     self.import_data_button = QPushButton("Importar Datos", self)
     self.import_data_button.clicked.connect(self.import_data)
-    self.top_layout.addWidget(self.import_data_button)
+    self.import_data_button.setCursor(Qt.PointingHandCursor)  # Updated cursor setting
+    self.left_panel.addWidget(self.import_data_button)
+
+    # Botón para generar números binarios aleatorios
+    self.random_binary_button = QPushButton("Random", self)
+    self.random_binary_button.clicked.connect(self.generate_random_binaries)
+    self.random_binary_button.setCursor(Qt.PointingHandCursor)  # Updated cursor setting
+    self.left_panel.addWidget(self.random_binary_button)
+
+    # Espaciador para ocupar espacio sobrante
+    self.left_panel.addItem(QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding))
+
+    # Botón para mostrar resultados
+    self.show_results_button = QPushButton("Mostrar Resultados", self)
+    self.show_results_button.setMinimumHeight(50)
+    self.show_results_button.clicked.connect(self.show_results)
+    self.show_results_button.setCursor(Qt.PointingHandCursor)  # Updated cursor setting
+    self.left_panel.addWidget(self.show_results_button)
+
+    # Right panel for the table and checkboxes
+    self.right_panel = QVBoxLayout()
+    self.main_layout.addLayout(self.right_panel, 4)  # 80% of space
 
     # Crear contenedor para las tablas y los checkboxes
     self.table_container = QWidget()
     self.table_layout = QVBoxLayout(self.table_container)
-    self.main_layout.addWidget(self.table_container)
+    self.right_panel.addWidget(self.table_container)
 
     # Crear un layout para checkboxes
     self.checkboxes_layout = QHBoxLayout()
@@ -76,12 +139,17 @@ class AgregarWindow(QWidget):
     # Crear objeto Table
     self.data_table = Table()
 
-    # Botón para mostrar resultados
-    self.show_results_button = QPushButton("Mostrar Resultados", self)
-    self.show_results_button.setStyleSheet("font-size: 16px; background-color: #00ff00;")  # Color verde
-    self.show_results_button.setMinimumHeight(50)
-    self.show_results_button.clicked.connect(self.show_results)
-    self.main_layout.addWidget(self.show_results_button)
+    # Configure the table to adjust header and wrap text
+    self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+    self.table.horizontalHeader().setStyleSheet("""
+      QHeaderView::section { 
+        background-color: #145c96; 
+        color: white; 
+        font-size: 14px;
+        font-weight: bold;
+      }
+    """)
+    self.table.setWordWrap(True)
 
   def add_column(self):
     column_name = self.column_name_input.text().strip()  # Limpiar espacios en blanco
@@ -91,7 +159,7 @@ class AgregarWindow(QWidget):
         if column_name in self.column_names:
           QMessageBox.warning(self, "Advertencia", "El nombre de la columna ya existe.")
           return
-        if self.table.columnCount() > 8:
+        if self.table.columnCount() >= 8:
           QMessageBox.warning(self, "Advertencia", "No se pueden agregar más de 8 columnas.")
           return
         current_column_count = self.table.columnCount()
@@ -198,12 +266,18 @@ class AgregarWindow(QWidget):
           for col_index, value in enumerate(row):
             item = QTableWidgetItem(str(value))
             if str(value) not in ['0', '1']:
-              item.setBackground(Qt.red)  # Indicar error en rojo
+              item.setBackground(QColor('#FFCCCC'))  # Indicar error en rojo claro
               item.setToolTip("El valor debe ser 0 o 1.")
             self.table.setItem(row_index, col_index, item)
 
       except Exception as e:
         QMessageBox.warning(self, "Error", f"Ocurrió un error al leer el archivo: {str(e)}")
+
+  def generate_random_binaries(self):
+    for row in range(self.table.rowCount()):
+      for col in range(self.table.columnCount()):
+        random_value = str(random.randint(0, 1))
+        self.table.setItem(row, col, QTableWidgetItem(random_value))
 
   def show_results(self):
     # Ensure exactly two columns are selected

@@ -1,22 +1,23 @@
 import sys
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QHBoxLayout, QVBoxLayout, QLabel, QPushButton, QFrame
-from PyQt5.QtGui import QPixmap, QPainter, QPainterPath, QImage, QIcon
+from PyQt5.QtGui import QPixmap, QPainter, QPainterPath, QImage, QIcon, QFont
 from PyQt5.QtCore import Qt
 from agregar_window import AgregarWindow
 
 class MainApp(QMainWindow):
   def __init__(self):
     super().__init__()
-    self.setWindowTitle("MECHI - Chi-Cuadrado")
-    self.setGeometry(100, 100, 600, 400)  # Smaller window size
+    self.setWindowTitle("MECHI - Chi2")
+    self.setGeometry(100, 100, 600, 400)
 
-		# Set the application icon
-    self.setWindowIcon(QIcon('img/IconLogoMechi.png'))  # Change to your icon path
+    # Set the application icon
+    self.setWindowIcon(QIcon('img/IconLogoMechi.png'))
 
     self.central_widget = QWidget()
     self.setCentralWidget(self.central_widget)
 
     self.main_layout = QHBoxLayout(self.central_widget)
+    self.main_layout.setContentsMargins(20, 20, 20, 20)
 
     # Frame izquierdo
     self.left_frame = QFrame(self)
@@ -25,6 +26,8 @@ class MainApp(QMainWindow):
     self.main_layout.addWidget(self.left_frame)
 
     self.left_layout = QVBoxLayout(self.left_frame)
+    self.left_layout.setAlignment(Qt.AlignCenter)
+    self.left_layout.setSpacing(20)
 
     # Imagen circular
     self.img_label = QLabel(self.left_frame)
@@ -35,7 +38,7 @@ class MainApp(QMainWindow):
     # Texto
     self.text_label = QLabel("MECHI\nEquipo 4\nInteligencia de Negocios\nDr. Luis Javier Mena Camare", self.left_frame)
     self.text_label.setAlignment(Qt.AlignCenter)
-    self.text_label.setStyleSheet("font-size: 16px; margin-top: 20px;")
+    self.text_label.setStyleSheet("font-size: 18px; color: #343a40;")
     self.left_layout.addWidget(self.text_label)
 
     # Frame derecho
@@ -45,25 +48,60 @@ class MainApp(QMainWindow):
     self.main_layout.addWidget(self.right_frame)
 
     self.right_layout = QVBoxLayout(self.right_frame)
-    self.right_layout.setAlignment(Qt.AlignCenter)  # Center the buttons
-    self.right_layout.setSpacing(10)  # Reduce spacing between buttons
+    self.right_layout.setAlignment(Qt.AlignCenter)
+    self.right_layout.setSpacing(15)
 
     # Botones
+    button_style = """
+    QPushButton {
+      font-size: 18px;
+      padding: 10px;
+      border-radius: 8px;
+      border: 2px solid #007bff;
+      background-color: #145c96;
+      color: white;
+    }
+    QPushButton:hover {
+      background-color: #1976D2;
+    }
+    QPushButton:pressed {
+      background-color: #2076D2;
+    }
+    """
     self.insertar_button = QPushButton("INSERTAR DATOS", self.right_frame)
-    self.insertar_button.setMinimumSize(270, 50)  # 90% of 300px width
-    self.insertar_button.setStyleSheet("font-size: 20px; background-color: #e0ffe0;")
+    self.insertar_button.setMinimumSize(270, 50)
+    self.insertar_button.setCursor(Qt.PointingHandCursor)  # Updated cursor setting
+    self.insertar_button.setStyleSheet(button_style)
     self.insertar_button.clicked.connect(self.open_agregar_window)
     self.right_layout.addWidget(self.insertar_button)
 
     self.importar_button = QPushButton("IMPORTAR DATOS", self.right_frame)
-    self.importar_button.setMinimumSize(270, 50)  # 90% of 300px width
-    self.importar_button.setStyleSheet("font-size: 20px; background-color: #e0ffe0;")
+    self.importar_button.setMinimumSize(270, 50)
+    self.importar_button.setCursor(Qt.PointingHandCursor)  # Updated cursor setting
+    self.importar_button.setStyleSheet(button_style)
     self.importar_button.clicked.connect(self.open_agregar_window_and_import_data)
     self.right_layout.addWidget(self.importar_button)
 
+    cerrar_button_style = """
+    QPushButton {
+      font-size: 18px;
+      padding: 10px;
+      border-radius: 8px;
+      border: 2px solid #dc3545;
+      background-color: #dc3545;
+      color: white;
+    }
+    QPushButton:hover {
+      background-color: #c82333;
+    }
+    QPushButton:pressed {
+      background-color: #bd2130;
+    }
+    """
     self.cerrar_button = QPushButton("CERRAR", self.right_frame)
-    self.cerrar_button.setMinimumSize(270, 50)  # 90% of 300px width
-    self.cerrar_button.setStyleSheet("font-size: 20px; background-color: #ffe0e0;")
+    self.cerrar_button.setMinimumSize(270, 50)
+    self.cerrar_button.setCursor(Qt.PointingHandCursor)  # Updated cursor setting
+    self.cerrar_button.setStyleSheet(cerrar_button_style)
     self.cerrar_button.clicked.connect(self.close_app)
     self.right_layout.addWidget(self.cerrar_button)
 
