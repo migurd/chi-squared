@@ -4,6 +4,9 @@ from PyQt5.QtWidgets import (
   QCheckBox, QFormLayout
 )
 from PyQt5.QtCore import Qt
+from Models.table import Table
+from Models.column import Column
+from result_window import ResultWindow
 
 class AgregarWindow(QWidget):
   def __init__(self):
@@ -63,15 +66,27 @@ class AgregarWindow(QWidget):
     self.column_names = []
     self.checkboxes = []
 
+    # Crear objeto Table
+    self.data_table = Table()
+
+    # Botón para mostrar resultados
+    self.show_results_button = QPushButton("Mostrar Resultados", self)
+    self.show_results_button.setStyleSheet("font-size: 16px; background-color: #00ff00;")  # Color verde
+    self.show_results_button.setMinimumHeight(50)
+    self.show_results_button.clicked.connect(self.show_results)
+    self.main_layout.addWidget(self.show_results_button)
+
   def add_column(self):
     column_name = self.column_name_input.text().strip()  # Limpiar espacios en blanco
 
-    # Depuración: Mostrar el valor del campo de entrada y su tipo
-    print(f"Valor del campo de entrada: '{column_name}'")
-    print(f"Tipo del valor del campo de entrada: {type(column_name)}")
-
     if isinstance(column_name, str):  # Verificar que column_name es una cadena de texto
       if column_name:
+        if column_name in self.column_names:
+          QMessageBox.warning(self, "Advertencia", "El nombre de la columna ya existe.")
+          return
+        if self.table.columnCount() > 8:
+          QMessageBox.warning(self, "Advertencia", "No se pueden agregar más de 8 columnas.")
+          return
         current_column_count = self.table.columnCount()
         self.table.insertColumn(current_column_count)
         self.table.setHorizontalHeaderItem(current_column_count, QTableWidgetItem(column_name))
@@ -136,6 +151,16 @@ class AgregarWindow(QWidget):
           QMessageBox.warning(self, "Advertencia", "El archivo está vacío.")
           return
 
+        # Verificar el número de columnas
+        if len(df.columns) > 8:
+          QMessageBox.warning(self, "Advertencia", "El archivo tiene más de 8 columnas.")
+          return
+
+        # Verificar nombres de columnas repetidos
+        if any(column in self.column_names for column in df.columns):
+          QMessageBox.warning(self, "Advertencia", "El archivo contiene nombres de columnas repetidos.")
+          return
+
         # Limpiar tabla existente antes de cargar nuevos datos
         self.clear_table()
 
@@ -147,6 +172,7 @@ class AgregarWindow(QWidget):
         self.table.setColumnCount(num_columns)
         self.table.setRowCount(num_rows)
         self.table.setHorizontalHeaderLabels(df.columns)
+        self.column_names.extend(df.columns)
 
         # Crear checkboxes para las columnas
         self.checkboxes = []
@@ -169,15 +195,44 @@ class AgregarWindow(QWidget):
       except Exception as e:
         QMessageBox.warning(self, "Error", f"Ocurrió un error al leer el archivo: {str(e)}")
 
-  def validate_table(self):
+  def show_results(self):
+    # Ensure exactly two columns are selected
+    self.data_table.selected_index_columns = [i for i, checkbox in enumerate(self.checkboxes) if checkbox.isChecked()]
+    if len(self.data_table.selected_index_columns) != 2:
+      QMessageBox.warning(self, "Advertencia", "Debe seleccionar exactamente dos columnas.")
+      return
+
+    # Ensure at least one row is present
+    if self.table.rowCount() == 0:
+      QMessageBox.warning(self, "Advertencia", "Debe haber al menos una fila en la tabla.")
+      return
+
+    # Ensure all values are binary and present
+    all_values_valid = True
     for row in range(self.table.rowCount()):
       for col in range(self.table.columnCount()):
         item = self.table.item(row, col)
-        if item:
-          value = item.text()
-          if value not in ['0', '1']:
-            item.setBackground(Qt.red)
-            item.setToolTip("El valor debe ser 0 o 1.")
-          else:
-            item.setBackground(Qt.white)
-            item.setToolTip("")
+        if not item or item.text() not in ['0', '1']:
+          all_values_valid = False
+          break
+      if not all_values_valid:
+        break
+
+    if not all_values_valid:
+      QMessageBox.warning(self, "Advertencia", "Todas las filas deben tener valores válidos (0 o 1).")
+      return
+
+    # Update the data_table with the values from the table
+    self.data_table.clear_columns()
+    for col_index in range(self.table.columnCount()):
+      column_data = []
+      for row_index in range(self.table.rowCount()):
+        item = self.table.item(row_index, col_index)
+        column_data.append(int(item.text()))
+      column_name = self.table.horizontalHeaderItem(col_index).text()
+      column = Column(column_name, column_data)
+      self.data_table.add_column(column)
+
+    self.data_table.get_contingency_table()
+    self.result_window = ResultWindow(self.data_table)
+    self.result_window.show()

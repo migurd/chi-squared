@@ -1,19 +1,18 @@
-from .column import Column
+import math
 import pandas as pd
+from .column import Column
 from typing import List, Tuple
 
 class Table:
-  columns = []  # Obj Column
-  selected_index_columns: List[int] = []  # int indexes
-  contingency_table = None
-
   def __init__(self):
-    pass
+    self.columns = []
+    self.selected_index_columns = []
+    self.contingency_table = None
 
   def select_index_column(self, index: int):
     self.selected_index_columns.append(index)
 
-  def add_column(self, new_column : Column):
+  def add_column(self, new_column: Column):
     self.columns.append(new_column)
 
   def clear_columns(self):
@@ -22,97 +21,103 @@ class Table:
   def are_all_columns_binary(self) -> bool:
     return all(all(value in (0, 1) for value in column.values) for column in self.columns)
 
+  def get_names(self) -> Tuple[str, str]:
+    name1 = self.columns[self.selected_index_columns[0]].name
+    name2 = self.columns[self.selected_index_columns[1]].name
+    return name1, name2
+
   # Create a DataFrame with the new data and names
   def get_contingency_table(self) -> List[List[int]]:
+    name1, name2 = self.get_names()
+    
     # Prepare the data for DataFrame
     data = {
-      self.columns[self.selected_index_columns[0]].name: self.columns[self.selected_index_columns[0]].values,
-      self.columns[self.selected_index_columns[1]].name: self.columns[self.selected_index_columns[1]].values
+      name1: self.columns[self.selected_index_columns[0]].values,
+      name2: self.columns[self.selected_index_columns[1]].values
     }
 
     df = pd.DataFrame(data)
 
     # Generate the contingency table
-    self.contingency_table = pd.crosstab(df[self.columns[self.selected_index_columns[0]].name], df[self.columns[self.selected_index_columns[1]].name], margins=True)
-    self.contingency_table = self.contingency_table.rename(index={0: '~n1', 1: 'n1'}, columns={0: '~n2', 1: 'n2'})
-    self.contingency_table = self.contingency_table.reindex(['n1', '~n1', 'All'], axis=0).reindex(['n2', '~n2', 'All'], axis=1)
-    
-    # print("Tabla de Contingencia:")
-    # print(self.contingency_table.to_string(index_names=False, col_space=10))
+    self.contingency_table = pd.crosstab(df[name1], df[name2], margins=True)
+    self.contingency_table = self.contingency_table.rename(index={0: f'~{name1}', 1: name1}, columns={0: f'~{name2}', 1: name2})
+    self.contingency_table = self.contingency_table.reindex([name1, f'~{name1}', 'All'], axis=0).reindex([name2, f'~{name2}', 'All'], axis=1)
 
     return self.contingency_table.values.tolist()
 
   # Función para calcular cobertura y confianza
   def calculate_coverage_confidence(self, condition):
+    name1, name2 = self.get_names()
     total = self.contingency_table.at['All', 'All']
     coverage_count = total_condition = 0  # Inicializar variables
 
-    if condition == "Si (n1=1) entonces n2=1":
-      coverage_count = self.contingency_table.at['n1', 'n2']
-      total_n1 = self.contingency_table.at['n1', 'All']
+    if condition == f"Si ({name1}=1) entonces {name2}=1":
+      coverage_count = self.contingency_table.at[name1, name2]
+      total_n1 = self.contingency_table.at[name1, 'All']
       coverage = coverage_count / total
       confidence = coverage_count / total_n1
       total_condition = total_n1
-    elif condition == "Si (n1=1) entonces n2=0":
-      coverage_count = self.contingency_table.at['n1', '~n2']
-      total_n1 = self.contingency_table.at['n1', 'All']
+    elif condition == f"Si ({name1}=1) entonces {name2}=0":
+      coverage_count = self.contingency_table.at[name1, f'~{name2}']
+      total_n1 = self.contingency_table.at[name1, 'All']
       coverage = coverage_count / total
       confidence = coverage_count / total_n1
       total_condition = total_n1
-    elif condition == "Si (n1=0) entonces n2=1":
-      coverage_count = self.contingency_table.at['~n1', 'n2']
-      total_n0 = self.contingency_table.at['~n1', 'All']
+    elif condition == f"Si ({name1}=0) entonces {name2}=1":
+      coverage_count = self.contingency_table.at[f'~{name1}', name2]
+      total_n0 = self.contingency_table.at[f'~{name1}', 'All']
       coverage = coverage_count / total
       confidence = coverage_count / total_n0
       total_condition = total_n0
-    elif condition == "Si (n1=0) entonces n2=0":
-      coverage_count = self.contingency_table.at['~n1', '~n2']
-      total_n0 = self.contingency_table.at['~n1', 'All']
+    elif condition == f"Si ({name1}=0) entonces {name2}=0":
+      coverage_count = self.contingency_table.at[f'~{name1}', f'~{name2}']
+      total_n0 = self.contingency_table.at[f'~{name1}', 'All']
       coverage = coverage_count / total
       confidence = coverage_count / total_n0
       total_condition = total_n0
-    elif condition == "Si (n2=1) entonces n1=1":
-      coverage_count = self.contingency_table.at['n1', 'n2']
-      total_n2 = self.contingency_table.at['All', 'n2']
+    elif condition == f"Si ({name2}=1) entonces {name1}=1":
+      coverage_count = self.contingency_table.at[name1, name2]
+      total_n2 = self.contingency_table.at['All', name2]
       coverage = coverage_count / total
       confidence = coverage_count / total_n2
       total_condition = total_n2
-    elif condition == "Si (n2=1) entonces n1=0":
-      coverage_count = self.contingency_table.at['~n1', 'n2']
-      total_n2 = self.contingency_table.at['All', 'n2']
+    elif condition == f"Si ({name2}=1) entonces {name1}=0":
+      coverage_count = self.contingency_table.at[f'~{name1}', name2]
+      total_n2 = self.contingency_table.at['All', name2]
       coverage = coverage_count / total
       confidence = coverage_count / total_n2
       total_condition = total_n2
-    elif condition == "Si (n2=0) entonces n1=1":
-      coverage_count = self.contingency_table.at['n1', '~n2']
-      total_n2 = self.contingency_table.at['All', '~n2']
+    elif condition == f"Si ({name2}=0) entonces {name1}=1":
+      coverage_count = self.contingency_table.at[name1, f'~{name2}']
+      total_n2 = self.contingency_table.at['All', f'~{name2}']
       coverage = coverage_count / total
       confidence = coverage_count / total_n2
       total_condition = total_n2
-    elif condition == "Si (n2=0) entonces n1=0":
-      coverage_count = self.contingency_table.at['~n1', '~n2']
-      total_n2 = self.contingency_table.at['All', '~n2']
+    elif condition == f"Si ({name2}=0) entonces {name1}=0":
+      coverage_count = self.contingency_table.at[f'~{name1}', f'~{name2}']
+      total_n2 = self.contingency_table.at['All', f'~{name2}']
       coverage = coverage_count / total
       confidence = coverage_count / total_n2
       total_condition = total_n2
     else:
       coverage = confidence = None
-    
+
     return coverage, confidence, coverage_count, total_condition
 
   # Condiciones para calcular cobertura y confianza
   def get_coverage_confidence(self) -> Tuple[List[str], List[str]]:
     coverage_list = []
     confidence_list = []
+    name1, name2 = self.get_names()
     conditions = [
-      "Si (n1=1) entonces n2=1",
-      "Si (n1=1) entonces n2=0",
-      "Si (n1=0) entonces n2=1",
-      "Si (n1=0) entonces n2=0",
-      "Si (n2=1) entonces n1=1",
-      "Si (n2=1) entonces n1=0",
-      "Si (n2=0) entonces n1=1",
-      "Si (n2=0) entonces n1=0"
+      f"Si ({name1}=1) entonces {name2}=1",
+      f"Si ({name1}=1) entonces {name2}=0",
+      f"Si ({name1}=0) entonces {name2}=1",
+      f"Si ({name1}=0) entonces {name2}=0",
+      f"Si ({name2}=1) entonces {name1}=1",
+      f"Si ({name2}=1) entonces {name1}=0",
+      f"Si ({name2}=0) entonces {name1}=1",
+      f"Si ({name2}=0) entonces {name1}=0"
     ]
 
     # Calcular y almacenar la cobertura y confianza para cada condición
@@ -126,7 +131,7 @@ class Table:
       else:
         coverage_result = f"{condition}: No se pudo calcular cobertura"
         confidence_result = f"{condition}: No se pudo calcular confianza"
-      
+
       coverage_list.append(coverage_result)
       confidence_list.append(confidence_result)
 
@@ -134,11 +139,12 @@ class Table:
 
   # Función para calcular el factor de dependencia
   def calculate_dependency_factor(self):
+    name1, name2 = self.get_names()
     total = self.contingency_table.at['All', 'All']
-    factors = pd.DataFrame(index=['n1', '~n1'], columns=['n2', '~n2'])
+    factors = pd.DataFrame(index=[name1, f'~{name1}'], columns=[name2, f'~{name2}'])
 
-    for i in ['n1', '~n1']:
-      for j in ['n2', '~n2']:
+    for i in [name1, f'~{name1}']:
+      for j in [name2, f'~{name2}']:
         P_i_and_j = self.contingency_table.at[i, j] / total
         P_i = self.contingency_table.at[i, 'All'] / total
         P_j = self.contingency_table.at['All', j] / total
@@ -148,19 +154,96 @@ class Table:
           FD = 0
         factors.at[i, j] = round(FD, 3)  # Redondear a 3 decimales
     return factors
-  
+
   def get_dependency_factor(self) -> List[List[int]]:
     dependency_factors = self.calculate_dependency_factor()
-    # print("\nFactor de Dependencia:")
-    # print(dependency_factors.to_string(index_names=False, col_space=10))
     return dependency_factors.values.tolist()
-  
+
   def __repr__(self):
     return f"Table(columns={self.columns})"
 
+  def calculate_chi_squared(self) -> Tuple[float, str]:
+    # Ensure the contingency table is available
+    if self.contingency_table is None:
+      self.get_contingency_table()
+    
+    name1, name2 = self.get_names()
+    
+    # Observed values
+    o_11 = self.contingency_table.at[name1, name2]
+    o_12 = self.contingency_table.at[name1, f'~{name2}']
+    o_21 = self.contingency_table.at[f'~{name1}', name2]
+    o_22 = self.contingency_table.at[f'~{name1}', f'~{name2}']
+    
+    # Marginal totals
+    n1_total = self.contingency_table.at[name1, 'All']
+    n0_total = self.contingency_table.at[f'~{name1}', 'All']
+    total_n2 = self.contingency_table.at['All', name2]
+    total_n0 = self.contingency_table.at['All', f'~{name2}']
+    grand_total = self.contingency_table.at['All', 'All']
+
+    # Expected values
+    e_11 = (n1_total * total_n2) / grand_total
+    e_12 = (n1_total * total_n0) / grand_total
+    e_21 = (n0_total * total_n2) / grand_total
+    e_22 = (n0_total * total_n0) / grand_total
+
+    # Chi-squared calculation components
+    n1 = (o_11 - e_11)**2 / e_11
+    n2 = (o_12 - e_12)**2 / e_12
+    n3 = (o_21 - e_21)**2 / e_21
+    n4 = (o_22 - e_22)**2 / e_22
+
+    # Sum of components to get chi-squared value
+    chi_squared = n1 + n2 + n3 + n4
+
+    # Detailed calculation steps
+    steps = (
+      f"({o_11} - {e_11:.2f})^2 / {e_11:.2f} = {n1:.4f}, "
+      f"({o_12} - {e_12:.2f})^2 / {e_12:.2f} = {n2:.4f}, "
+      f"({o_21} - {e_21:.2f})^2 / {e_21:.2f} = {n3:.4f}, "
+      f"({o_22} - {e_22:.2f})^2 / {e_22:.2f} = {n4:.4f}"
+    )
+    result_string = f"X^2 = {n1:.4f} + {n2:.4f} + {n3:.4f} + {n4:.4f} = {chi_squared:.4f}"
+
+    return chi_squared, steps, result_string
+
+  def determine_significance(self, chi_squared: float) -> str:
+    # Degrees of freedom for a 2x2 table is (rows-1) * (cols-1) = 1
+    df = 1
+    
+    # Critical values for chi-squared distribution with df=1
+    critical_values = {
+      '95%': 3.84,
+      '99%': 6.63,
+      '99.99%': 15.1367
+    }
+    
+    # Initialize significance and messages
+    significance = "No se rechaza hipótesis de independencia"
+    messages = []
+
+    if chi_squared > critical_values['95%']:
+      significance = "Dependientes por confianza de 95%"
+      messages.append(f"{chi_squared:.4f} > {critical_values['95%']}, entonces SÍ se rechaza hipótesis de independencia con confianza de 95%")
+    else:
+      messages.append(f"{chi_squared:.4f} < {critical_values['95%']}, entonces NO se rechaza hipótesis de independencia con confianza de 95%")
+    if chi_squared > critical_values['99%']:
+      significance = "Dependientes por confianza de 99%"
+      messages.append(f"{chi_squared:.4f} > {critical_values['99%']}, entonces SÍ se rechaza hipótesis de independencia con confianza de 99%")
+    else:
+      messages.append(f"{chi_squared:.4f} < {critical_values['99%']}, entonces NO se rechaza hipótesis de independencia con confianza de 99%")
+    if chi_squared > critical_values['99.99%']:
+      significance = "Dependientes por confianza de 99.99%"
+      messages.append(f"{chi_squared:.4f} > {critical_values['99.99%']}, entonces SÍ se rechaza hipótesis de independencia con confianza de 99.99%")
+    else:
+      messages.append(f"{chi_squared:.4f} < {critical_values['99.99%']}, entonces NO se rechaza hipótesis de independencia con confianza de 99.99%")
+    
+    return significance + "\n" + "\n".join(messages)
+
 if __name__ == "__main__":
   # Creating Column instances
-  col1 = Column('Pan blanco',[1, 1, 1, 0, 0, 0, 0, 0, 0, 0])
+  col1 = Column('Pan blanco', [1, 1, 1, 0, 0, 0, 0, 0, 0, 0])
   col2 = Column('Pan integral', [1, 0, 0, 1, 1, 1, 0, 0, 0, 0])
 
   # Creating a Table instance
@@ -176,7 +259,6 @@ if __name__ == "__main__":
 
   # Checking if all column values are binary
   print(f"All columns are binary: {table.are_all_columns_binary()}")
-
   # Check contingency table
   contingency_table = table.get_contingency_table()
   print(f'Tabla de contingencia: \n{contingency_table}')
@@ -189,8 +271,18 @@ if __name__ == "__main__":
 
   # Check dependency factor
   dependency_fator = table.get_dependency_factor()
-  print(f'Tabla de depenendencia: \n{dependency_fator}')
+  print(f'Tabla de dependencia: \n{dependency_fator}')
 
   # Printing the table's columns
   for col in table.columns:
     print(f"Column Name: {col.name}, Column Values: {col.values}")
+
+    # Get chi-squared value, calculation steps, and result string
+  chi_squared_value, chi_squared_steps, result_string = table.calculate_chi_squared()
+  print(f"Chi-squared value: {chi_squared_value}")
+  print(f"Calculation steps: {chi_squared_steps}")
+  print(result_string)
+
+  # Determine significance
+  significance = table.determine_significance(chi_squared_value)
+  print(f"Significance: {significance}")
