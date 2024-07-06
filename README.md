@@ -38,7 +38,6 @@ Con el entorno virtual activado, instale las dependencias necesarias ejecutando:
 
 ```
 pip install -r requirements.txt
-Uso del Programa
 ```
 
 ## Uso

@@ -3,6 +3,7 @@ from PyQt5.QtWidgets import (
   QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QTableWidget, QTableWidgetItem, QLineEdit, QMessageBox, QFileDialog,
   QCheckBox, QFormLayout
 )
+from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import Qt
 from Models.table import Table
 from Models.column import Column
@@ -13,6 +14,9 @@ class AgregarWindow(QWidget):
     super().__init__()
     self.setWindowTitle("Agregar Datos")
     self.setGeometry(150, 150, 800, 600)
+
+		# Set the application icon
+    self.setWindowIcon(QIcon('img/IconLogoMechi.png'))  # Change to your icon path
 
     self.main_layout = QVBoxLayout(self)
 
@@ -53,15 +57,18 @@ class AgregarWindow(QWidget):
     self.import_data_button.clicked.connect(self.import_data)
     self.top_layout.addWidget(self.import_data_button)
 
-    # Crear tabla
-    self.table = QTableWidget(self)
-    self.main_layout.addWidget(self.table)
+    # Crear contenedor para las tablas y los checkboxes
+    self.table_container = QWidget()
+    self.table_layout = QVBoxLayout(self.table_container)
+    self.main_layout.addWidget(self.table_container)
 
     # Crear un layout para checkboxes
-    self.checkboxes_layout = QFormLayout()
-    self.checkboxes_container = QWidget()
-    self.checkboxes_container.setLayout(self.checkboxes_layout)
-    self.main_layout.addWidget(self.checkboxes_container)
+    self.checkboxes_layout = QHBoxLayout()
+    self.table_layout.addLayout(self.checkboxes_layout)
+
+    # Crear tabla
+    self.table = QTableWidget(self)
+    self.table_layout.addWidget(self.table)
 
     self.column_names = []
     self.checkboxes = []
@@ -92,7 +99,7 @@ class AgregarWindow(QWidget):
         self.table.setHorizontalHeaderItem(current_column_count, QTableWidgetItem(column_name))
         self.column_names.append(column_name)
         # Añadir un nuevo checkbox
-        checkbox = QCheckBox(f"Columna {current_column_count + 1}", self)
+        checkbox = QCheckBox(column_name, self)
         self.checkboxes_layout.addWidget(checkbox)
         self.checkboxes.append(checkbox)
         self.column_name_input.clear()  # Limpiar campo de entrada después de agregar
@@ -111,6 +118,9 @@ class AgregarWindow(QWidget):
         self.checkboxes_layout.removeWidget(checkbox)
         checkbox.deleteLater()
       self.column_names.pop()
+      # Limpiar tabla si no quedan columnas
+      if self.table.columnCount() == 0:
+        self.clear_table()
     else:
       QMessageBox.warning(self, "Advertencia", "No hay columnas para eliminar.")
 
@@ -178,8 +188,8 @@ class AgregarWindow(QWidget):
         self.checkboxes = []
         self.checkboxes_layout.setSpacing(10)  # Opcional: ajustar espaciado entre checkboxes
 
-        for i in range(num_columns):
-          checkbox = QCheckBox(f"Columna {i + 1}", self)
+        for i, column in enumerate(df.columns):
+          checkbox = QCheckBox(column, self)
           self.checkboxes_layout.addWidget(checkbox)
           self.checkboxes.append(checkbox)
 
@@ -197,8 +207,8 @@ class AgregarWindow(QWidget):
 
   def show_results(self):
     # Ensure exactly two columns are selected
-    self.data_table.selected_index_columns = [i for i, checkbox in enumerate(self.checkboxes) if checkbox.isChecked()]
-    if len(self.data_table.selected_index_columns) != 2:
+    selected_checkboxes = [i for i, checkbox in enumerate(self.checkboxes) if checkbox.isChecked()]
+    if len(selected_checkboxes) != 2:
       QMessageBox.warning(self, "Advertencia", "Debe seleccionar exactamente dos columnas.")
       return
 
@@ -233,6 +243,7 @@ class AgregarWindow(QWidget):
       column = Column(column_name, column_data)
       self.data_table.add_column(column)
 
+    self.data_table.selected_index_columns = selected_checkboxes
     self.data_table.get_contingency_table()
     self.result_window = ResultWindow(self.data_table)
     self.result_window.show()

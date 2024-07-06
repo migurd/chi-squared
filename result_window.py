@@ -1,5 +1,6 @@
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel, QTableWidget, QTableWidgetItem, QHeaderView, QScrollArea
 from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QIcon
 from Models.column import Column
 from Models.table import Table
 
@@ -7,7 +8,11 @@ class ResultWindow(QWidget):
   def __init__(self, table):
     super().__init__()
     self.setWindowTitle("Resultados")
-    self.setGeometry(200, 200, 600, 750)
+    self.setGeometry(200, 200, 700, 600)
+    
+		# Set the application icon
+    self.setWindowIcon(QIcon('img/IconLogoMechi.png'))  # Change to your icon path
+
     self.table = table
     self.init_ui()
 
@@ -22,7 +27,7 @@ class ResultWindow(QWidget):
 
     # Title
     title = QLabel("Resultados")
-    title.setAlignment(Qt.AlignCenter)
+    # title.setAlignment(Qt.AlignCenter)
     title.setStyleSheet("font-size: 24px; font-weight: bold;")
     layout.addWidget(title)
 
@@ -64,13 +69,13 @@ class ResultWindow(QWidget):
     layout.addWidget(chi_squared_title)
 
     # Display the chi-squared results
-    chi_squared_label = QLabel(f"Chi-squared value: {chi_squared_value:.4f}")
-    chi_squared_steps_label = QLabel(f"Calculation steps: {chi_squared_steps}")
-    result_string_label = QLabel(result_string)
+    chi_squared_label = QLabel(f"Valor Chi-cuadrado: {chi_squared_value:.4f}\n")
+    # chi_squared_steps_label = QLabel(f"Calculation steps: {chi_squared_steps}")
+    result_string_label = QLabel(f'{result_string}\n')
     significance_label = QLabel(significance)
 
     layout.addWidget(chi_squared_label)
-    layout.addWidget(chi_squared_steps_label)
+    # layout.addWidget(chi_squared_steps_label)
     layout.addWidget(result_string_label)
     layout.addWidget(significance_label)
 

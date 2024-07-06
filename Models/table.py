@@ -10,7 +10,8 @@ class Table:
     self.contingency_table = None
 
   def select_index_column(self, index: int):
-    self.selected_index_columns.append(index)
+    if index not in self.selected_index_columns:
+      self.selected_index_columns.append(index)
 
   def add_column(self, new_column: Column):
     self.columns.append(new_column)
@@ -240,49 +241,3 @@ class Table:
       messages.append(f"{chi_squared:.4f} < {critical_values['99.99%']}, entonces NO se rechaza hipótesis de independencia con confianza de 99.99%")
     
     return significance + "\n" + "\n".join(messages)
-
-if __name__ == "__main__":
-  # Creating Column instances
-  col1 = Column('Pan blanco', [1, 1, 1, 0, 0, 0, 0, 0, 0, 0])
-  col2 = Column('Pan integral', [1, 0, 0, 1, 1, 1, 0, 0, 0, 0])
-
-  # Creating a Table instance
-  table = Table()
-
-  # Adding columns to the table
-  table.add_column(col1)
-  table.add_column(col2)
-
-  # Select columns
-  table.select_index_column(0)
-  table.select_index_column(1)
-
-  # Checking if all column values are binary
-  print(f"All columns are binary: {table.are_all_columns_binary()}")
-  # Check contingency table
-  contingency_table = table.get_contingency_table()
-  print(f'Tabla de contingencia: \n{contingency_table}')
-
-  # Get coverage and confidence
-  coverage_results, confidence_results = table.get_coverage_confidence()
-  for coverage, confidence in zip(coverage_results, confidence_results):
-    print(coverage)
-    print(confidence)
-
-  # Check dependency factor
-  dependency_fator = table.get_dependency_factor()
-  print(f'Tabla de dependencia: \n{dependency_fator}')
-
-  # Printing the table's columns
-  for col in table.columns:
-    print(f"Column Name: {col.name}, Column Values: {col.values}")
-
-    # Get chi-squared value, calculation steps, and result string
-  chi_squared_value, chi_squared_steps, result_string = table.calculate_chi_squared()
-  print(f"Chi-squared value: {chi_squared_value}")
-  print(f"Calculation steps: {chi_squared_steps}")
-  print(result_string)
-
-  # Determine significance
-  significance = table.determine_significance(chi_squared_value)
-  print(f"Significance: {significance}")

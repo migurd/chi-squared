@@ -1,14 +1,17 @@
 import sys
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QHBoxLayout, QVBoxLayout, QLabel, QPushButton, QFrame
-from PyQt5.QtGui import QPixmap, QPainter, QPainterPath, QImage
+from PyQt5.QtGui import QPixmap, QPainter, QPainterPath, QImage, QIcon
 from PyQt5.QtCore import Qt
 from agregar_window import AgregarWindow
 
 class MainApp(QMainWindow):
   def __init__(self):
     super().__init__()
-    self.setWindowTitle("Interfaz Responsive")
+    self.setWindowTitle("MECHI - Chi-Cuadrado")
     self.setGeometry(100, 100, 600, 400)  # Smaller window size
+
+		# Set the application icon
+    self.setWindowIcon(QIcon('img/IconLogoMechi.png'))  # Change to your icon path
 
     self.central_widget = QWidget()
     self.setCentralWidget(self.central_widget)
