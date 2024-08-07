@@ -20,6 +20,7 @@ class Table:
 
         :param index: Índice de la columna a seleccionar.
         """
+
         if index not in self.selected_index_columns:
             self.selected_index_columns.append(index)
 
@@ -51,8 +52,10 @@ class Table:
 
         :return: Una tupla con los nombres de las dos columnas seleccionadas.
         """
+
         if len(self.selected_index_columns) < 2:
             raise ValueError("Se deben seleccionar exactamente dos columnas.")
+
         name1 = self.columns[self.selected_index_columns[0]].name
         name2 = self.columns[self.selected_index_columns[1]].name
         return name1, name2
@@ -75,6 +78,7 @@ class Table:
 
         # Generar la tabla de contingencia
         self.contingency_table = pd.crosstab(df[name1], df[name2], margins=True)
+
         self.contingency_table = self.contingency_table.rename(
             index={0: f'~{name1}', 1: name1},
             columns={0: f'~{name2}', 1: name2}
@@ -116,6 +120,7 @@ class Table:
             total_n = self.contingency_table.at[row, 'All']
         else:
             return None, None, coverage_count, total_n
+
 
         # Calcular cobertura
         coverage = coverage_count / total if total != 0 else 0
