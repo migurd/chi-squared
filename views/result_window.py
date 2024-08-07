@@ -97,7 +97,10 @@ class ResultWindow(QWidget):
 
     # Cálculo de chi-cuadrado
     chi_squared_value, chi_squared_steps, result_string = self.table.calculate_chi_squared()
-    significance = self.table.determine_significance(chi_squared_value)
+    # Asegúrate de calcular df correctamente antes de esta línea
+    df = (len(self.table.get_contingency_table()) - 1) * (len(self.table.get_contingency_table()[0]) - 1)
+    significance = self.table.is_significant(chi_squared_value, df)
+
 
     # Título de los resultados de chi-cuadrado
     chi_squared_title = QLabel("Chi-cuadrado")
